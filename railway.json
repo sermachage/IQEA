@@ -1,0 +1,13 @@
+{
+  "build": {
+    "builder": "dockerfile"
+  },
+  "deploy": {
+    "startCommand": "./demographic-api",
+    "restartPolicy": "on-failure",
+    "numReplicas": 1
+  },
+  "env": {
+    "PORT": "8080"
+  }
+}

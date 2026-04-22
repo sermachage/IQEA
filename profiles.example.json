@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Emmanuel Okafor",
+    "gender": "male",
+    "gender_probability": 0.99,
+    "age": 34,
+    "age_group": "adult",
+    "country_id": "NG",
+    "country_name": "Nigeria",
+    "country_probability": 0.85
+  },
+  {
+    "name": "Zainab Adeyemi",
+    "gender": "female",
+    "gender_probability": 0.98,
+    "age": 28,
+    "age_group": "adult",
+    "country_id": "NG",
+    "country_name": "Nigeria",
+    "country_probability": 0.87
+  },
+  {
+    "name": "Kwame Asante",
+    "gender": "male",
+    "gender_probability": 0.97,
+    "age": 19,
+    "age_group": "teenager",
+    "country_id": "GH",
+    "country_name": "Ghana",
+    "country_probability": 0.82
+  },
+  {
+    "name": "Amara Kipchoge",
+    "gender": "female",
+    "gender_probability": 0.96,
+    "age": 52,
+    "age_group": "adult",
+    "country_id": "KE",
+    "country_name": "Kenya",
+    "country_probability": 0.88
+  },
+  {
+    "name": "Joseph Mukwaya",
+    "gender": "male",
+    "gender_probability": 0.99,
+    "age": 42,
+    "age_group": "adult",
+    "country_id": "UG",
+    "country_name": "Uganda",
+    "country_probability": 0.86
+  }
+]
