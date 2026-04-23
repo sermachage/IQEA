@@ -8,7 +8,7 @@ import (
 )
 
 // GenerateTestProfiles creates a sample dataset for testing
-func GenerateTestProfiles(count int) []RawProfile {
+func GenerateTestProfilesLegacy(count int) []RawProfile {
 	names := []string{
 		"Emmanuel", "Zainab", "Kwame", "Amara", "Joseph", "Fatima", "Kofi", "Khadija",
 		"Ibrahim", "Aisha", "Jamal", "Leila", "Ahmed", "Noor", "Hassan", "Yasmin",
@@ -35,8 +35,6 @@ func GenerateTestProfiles(count int) []RawProfile {
 		{"Benin", "BJ"},
 		{"Mali", "ML"},
 	}
-
-	ageGroups := []string{"child", "teenager", "adult", "senior"}
 
 	profiles := make([]RawProfile, count)
 
@@ -78,8 +76,8 @@ func GenerateTestProfiles(count int) []RawProfile {
 }
 
 // GenerateAndSaveTestProfiles generates and saves test profiles to a file
-func GenerateAndSaveTestProfiles(filename string, count int) error {
-	profiles := GenerateTestProfiles(count)
+func GenerateAndSaveTestProfilesLegacy(filename string, count int) error {
+	profiles := GenerateTestProfilesLegacy(count)
 	data, err := json.MarshalIndent(profiles, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal profiles: %v", err)

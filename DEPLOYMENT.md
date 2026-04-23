@@ -1,3 +1,36 @@
+# IQEA Quick Deploy to Vercel (from ~)
+
+Use these commands from your home directory:
+
+```bash
+cd ~/IQEA
+go test ./...
+npm i -g vercel
+vercel login
+vercel env add DATABASE_URL production
+vercel env add DATABASE_URL preview
+vercel --prod
+```
+
+Verify:
+
+```bash
+curl https://<your-vercel-domain>/health
+curl "https://<your-vercel-domain>/api/profiles?page=1&limit=10"
+```
+
+Notes:
+- Vercel detects this project as Go via `go.mod` and `vercel.json`.
+- Seed production data from your machine/CI using production `DATABASE_URL`:
+
+```bash
+cd ~/IQEA
+export DATABASE_URL="<your-production-db-url>"
+go run . seed -file profiles.json
+```
+
+---
+
 # Deployment Guide for Insighta Labs Demographic API on Railway
 
 ## Prerequisites
