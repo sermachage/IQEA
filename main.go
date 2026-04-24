@@ -7,12 +7,18 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 
 func main() {
+	// load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	// Handle CLI commands first
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
@@ -26,7 +32,6 @@ func main() {
 	}
 
 	// Initialize database
-	var err error
 	db, err = initializeDatabase()
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
