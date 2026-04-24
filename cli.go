@@ -17,7 +17,7 @@ func handleSeed() {
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "host=localhost user=postgres password=5438 dbname=iqea sslmode=disable"
+		log.Fatal("DATABASE_URL is required; set it in Railway from the Postgres service, not localhost")
 	}
 
 	seedDB, err := initDB(dsn)

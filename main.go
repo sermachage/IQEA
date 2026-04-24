@@ -55,7 +55,7 @@ func main() {
 func initializeDatabase() (*sql.DB, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "host=localhost user=postgres password=postgres dbname=iqea sslmode=disable"
+		return nil, fmt.Errorf("DATABASE_URL is required; set it in Railway from the Postgres service, not localhost")
 	}
 
 	dbConn, err := sql.Open("postgres", dsn)
