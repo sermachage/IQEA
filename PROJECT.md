@@ -1,4 +1,4 @@
-# Insighta Labs - Demographic Intelligence API
+# Demographic Intelligence API
 
 ## Project Overview
 
