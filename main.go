@@ -7,12 +7,24 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 
 func main() {
+	// load .env file
+	_ = godotenv.Load()
+
+	// Initialize database
+	var err error
+	db, err = initializeDatabase()
+	if err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+	defer db.Close()
+
 	// Handle CLI commands first
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
@@ -25,15 +37,7 @@ func main() {
 		}
 	}
 
-	// Initialize database
-	var err error
-	db, err = initializeDatabase()
-	if err != nil {
-		log.Fatal("Failed to initialize database:", err)
-	}
-	defer db.Close()
-
-	// Set up routes
+	// Set up routes (only runs if no CLI command is given)
 	http.HandleFunc("GET /api/profiles", handleGetProfiles)
 	http.HandleFunc("GET /api/profiles/search", handleSearchProfiles)
 	http.HandleFunc("GET /health", handleHealth)

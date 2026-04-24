@@ -17,7 +17,7 @@ func handleSeed() {
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "host=localhost user=postgres password=postgres dbname=iqea sslmode=disable"
+		dsn = "host=localhost user=postgres password=5438 dbname=iqea sslmode=disable"
 	}
 
 	seedDB, err := initDB(dsn)
