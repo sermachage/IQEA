@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,8 +10,8 @@ import (
 
 func TestParseNaturalLanguageQuery(t *testing.T) {
 	tests := []struct {
-		query    string
-		expected QueryFilters
+		query     string
+		expected  QueryFilters
 		shouldErr bool
 	}{
 		{
@@ -20,8 +19,8 @@ func TestParseNaturalLanguageQuery(t *testing.T) {
 			expected: QueryFilters{
 				Gender:    "male",
 				CountryID: "NG",
-				MinAge: intPtr(16),
-				MaxAge: intPtr(24),
+				MinAge:    intPtr(16),
+				MaxAge:    intPtr(24),
 			},
 			shouldErr: false,
 		},
@@ -36,8 +35,8 @@ func TestParseNaturalLanguageQuery(t *testing.T) {
 		{
 			query: "adult males from kenya",
 			expected: QueryFilters{
-				Gender:   "male",
-				AgeGroup: "adult",
+				Gender:    "male",
+				AgeGroup:  "adult",
 				CountryID: "KE",
 			},
 			shouldErr: false,
@@ -51,7 +50,7 @@ func TestParseNaturalLanguageQuery(t *testing.T) {
 			shouldErr: false,
 		},
 		{
-			query:    "xyz qwerty asdf",
+			query:     "xyz qwerty asdf",
 			shouldErr: true,
 		},
 	}
@@ -80,14 +79,9 @@ func TestParseNaturalLanguageQuery(t *testing.T) {
 func TestGetProfilesResponse(t *testing.T) {
 	// This would require a test database
 	// For now, we just test the response structure
-	
-	req, err := http.NewRequest("GET", "/api/profiles", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	w := httptest.NewRecorder()
-	
+
 	// Mock handler response structure
 	response := ProfilesResponse{
 		Status: "success",
@@ -169,9 +163,6 @@ func TestPaginationLimitValidation(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("limit=%s", test.limit), func(t *testing.T) {
-			url := fmt.Sprintf("/api/profiles?limit=%s", test.limit)
-			req, _ := http.NewRequest("GET", url, nil)
-			
 			// Parse like the handler does
 			limit := 10
 			if test.limit != "" {
