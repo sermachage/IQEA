@@ -1,4 +1,4 @@
-# Insighta Labs - Demographic Intelligence API
+# Demographic Intelligence API
 
 A high-performance REST API for querying demographic data with advanced filtering, sorting, pagination, and natural language search capabilities.
 
