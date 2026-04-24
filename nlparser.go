@@ -1,71 +1,73 @@
 package main
 
 import (
+	"regexp"
+	"sort"
 	"strings"
 )
 
 // Country mapping
 var countryMap = map[string]string{
-	"nigeria": "NG",
-	"ghana": "GH",
-	"kenya": "KE",
-	"uganda": "UG",
-	"tanzania": "TZ",
-	"cameroon": "CM",
-	"senegal": "SN",
-	"mali": "ML",
-	"ivory coast": "CI",
-	"benin": "BJ",
-	"burkina faso": "BF",
-	"burundi": "BI",
-	"cape verde": "CV",
-	"central african republic": "CF",
-	"chad": "TD",
-	"comoros": "KM",
-	"congo": "CG",
+	"nigeria":                      "NG",
+	"ghana":                        "GH",
+	"kenya":                        "KE",
+	"uganda":                       "UG",
+	"tanzania":                     "TZ",
+	"cameroon":                     "CM",
+	"senegal":                      "SN",
+	"mali":                         "ML",
+	"ivory coast":                  "CI",
+	"benin":                        "BJ",
+	"burkina faso":                 "BF",
+	"burundi":                      "BI",
+	"cape verde":                   "CV",
+	"central african republic":     "CF",
+	"chad":                         "TD",
+	"comoros":                      "KM",
+	"congo":                        "CG",
 	"democratic republic of congo": "CD",
-	"djibouti": "DJ",
-	"egypt": "EG",
-	"equatorial guinea": "GQ",
-	"eritrea": "ER",
-	"eswatini": "SZ",
-	"ethiopia": "ET",
-	"gabon": "GA",
-	"gambia": "GM",
-	"guinea": "GN",
-	"guinea-bissau": "GW",
-	"lesotho": "LS",
-	"liberia": "LR",
-	"libya": "LY",
-	"madagascar": "MG",
-	"malawi": "MW",
-	"mauritania": "MR",
-	"mauritius": "MU",
-	"morocco": "MA",
-	"mozambique": "MZ",
-	"namibia": "NA",
-	"niger": "NE",
-	"rwanda": "RW",
-	"são tomé and príncipe": "ST",
-	"seychelles": "SC",
-	"sierra leone": "SL",
-	"somalia": "SO",
-	"south africa": "ZA",
-	"south sudan": "SS",
-	"sudan": "SD",
-	"togo": "TG",
-	"tunisia": "TN",
-	"zambia": "ZM",
-	"zimbabwe": "ZW",
-	"angola": "AO",
+	"djibouti":                     "DJ",
+	"egypt":                        "EG",
+	"equatorial guinea":            "GQ",
+	"eritrea":                      "ER",
+	"eswatini":                     "SZ",
+	"ethiopia":                     "ET",
+	"gabon":                        "GA",
+	"gambia":                       "GM",
+	"guinea":                       "GN",
+	"guinea-bissau":                "GW",
+	"lesotho":                      "LS",
+	"liberia":                      "LR",
+	"libya":                        "LY",
+	"madagascar":                   "MG",
+	"malawi":                       "MW",
+	"mauritania":                   "MR",
+	"mauritius":                    "MU",
+	"morocco":                      "MA",
+	"mozambique":                   "MZ",
+	"namibia":                      "NA",
+	"niger":                        "NE",
+	"rwanda":                       "RW",
+	"são tomé and príncipe":        "ST",
+	"seychelles":                   "SC",
+	"sierra leone":                 "SL",
+	"somalia":                      "SO",
+	"south africa":                 "ZA",
+	"south sudan":                  "SS",
+	"sudan":                        "SD",
+	"togo":                         "TG",
+	"tunisia":                      "TN",
+	"zambia":                       "ZM",
+	"zimbabwe":                     "ZW",
+	"angola":                       "AO",
 }
 
 // Age group classifications
 var ageGroupRanges = map[string][2]int{
-	"child":     {0, 12},
-	"teenager":  {13, 19},
-	"adult":     {20, 59},
-	"senior":    {60, 150},
+	"child":    {0, 12},
+	"teenager": {13, 19},
+	"adult":    {20, 59},
+	"senior":   {60, 150},
 }
 
 // Age qualifiers
@@ -138,9 +140,19 @@ func parseNaturalLanguageQuery(query string) (*QueryFilters, error) {
 	}
 
 	// Extract country
-	for countryName, countryCode := range countryMap {
-		if strings.Contains(query, countryName) {
-			filters.CountryID = countryCode
+	// Match longer country names first (e.g., "nigeria" before "niger")
+	countryNames := make([]string, 0, len(countryMap))
+	for countryName := range countryMap {
+		countryNames = append(countryNames, countryName)
+	}
+	sort.Slice(countryNames, func(i, j int) bool {
+		return len(countryNames[i]) > len(countryNames[j])
+	})
+
+	for _, countryName := range countryNames {
+		pattern := `\b` + regexp.QuoteMeta(countryName) + `\b`
+		if matched, _ := regexp.MatchString(pattern, query); matched {
+			filters.CountryID = countryMap[countryName]
 			break
 		}
 	}
