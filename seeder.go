@@ -11,14 +11,32 @@ import (
 )
 
 type RawProfile struct {
-	Name                string  `json:"name"`
-	Gender              string  `json:"gender"`
-	GenderProbability   float64 `json:"gender_probability"`
-	Age                 int     `json:"age"`
-	AgeGroup            string  `json:"age_group"`
-	CountryID           string  `json:"country_id"`
-	CountryName         string  `json:"country_name"`
-	CountryProbability  float64 `json:"country_probability"`
+	Name               string  `json:"name"`
+	Gender             string  `json:"gender"`
+	GenderProbability  float64 `json:"gender_probability"`
+	Age                int     `json:"age"`
+	AgeGroup           string  `json:"age_group"`
+	CountryID          string  `json:"country_id"`
+	CountryName        string  `json:"country_name"`
+	CountryProbability float64 `json:"country_probability"`
+}
+
+type profileFile struct {
+	Profiles []RawProfile `json:"profiles"`
+}
+
+func decodeProfilesJSON(data []byte) ([]RawProfile, error) {
+	var profiles []RawProfile
+	if err := json.Unmarshal(data, &profiles); err == nil {
+		return profiles, nil
+	}
+
+	var wrapped profileFile
+	if err := json.Unmarshal(data, &wrapped); err == nil && len(wrapped.Profiles) > 0 {
+		return wrapped.Profiles, nil
+	}
+
+	return nil, fmt.Errorf("failed to parse JSON: expected an array of profiles or an object with a profiles field")
 }
 
 func seedDatabase(db *sql.DB, jsonFilePath string) error {
@@ -33,10 +51,9 @@ func seedDatabase(db *sql.DB, jsonFilePath string) error {
 		return fmt.Errorf("JSON file not found at %s", jsonFilePath)
 	}
 
-	var profiles []RawProfile
-	err = json.Unmarshal(data, &profiles)
+	profiles, err := decodeProfilesJSON(data)
 	if err != nil {
-		return fmt.Errorf("failed to parse JSON: %v", err)
+		return err
 	}
 
 	log.Printf("Loaded %d profiles from JSON\n", len(profiles))
@@ -125,10 +142,9 @@ func downloadAndSeedProfiles(db *sql.DB, url string) error {
 		return fmt.Errorf("failed to read response body: %v", err)
 	}
 
-	var profiles []RawProfile
-	err = json.Unmarshal(data, &profiles)
+	profiles, err := decodeProfilesJSON(data)
 	if err != nil {
-		return fmt.Errorf("failed to parse JSON: %v", err)
+		return err
 	}
 
 	log.Printf("Downloaded %d profiles\n", len(profiles))
