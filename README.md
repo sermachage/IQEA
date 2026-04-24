@@ -19,7 +19,6 @@ This API provides demographic intelligence for marketing teams, product teams, a
 
 - **Language**: Go 1.21+
 - **Database**: PostgreSQL 12+
-- **Deployment**: Railway
 - **UUID**: UUID v7 for unique identifiers
 
 ## API Endpoints

@@ -1,282 +1,197 @@
-# IQEA Quick Deploy to Vercel (from ~)
+# Local Development & Deployment Guide
 
-Use these commands from your home directory:
+## Overview
+
+This guide covers local development and deployment for the Demographic Intelligence API. For production deployment to cloud platforms, please configure them separately through their respective web interfaces.
+
+## Local Development
+
+### Prerequisites
+
+- Go 1.21 or later
+- PostgreSQL 12 or later
+- Git
+
+### Initial Setup
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/yourusername/demographic-api.git
+cd demographic-api
+```
+
+2. **Install Go dependencies**
+```bash
+go mod download
+go mod tidy
+```
+
+3. **Create `.env` file**
+```bash
+cp .env.example .env
+# Edit .env with your database credentials
+```
+
+4. **Set up PostgreSQL locally**
 
 ```bash
-cd ~/IQEA
+# Option 1: PostgreSQL on your system
+createdb iqea
+
+# Option 2: Using Docker container
+docker run --name iqea-postgres \
+  -e POSTGRES_DB=iqea \
+  -e POSTGRES_PASSWORD=postgres \
+  -p 5432:5432 \
+  -d postgres:15-alpine
+```
+
+5. **Generate test data**
+```bash
+go run . generate -count 2026 -output profiles.json
+```
+
+6. **Seed the database**
+```bash
+go run . seed -file profiles.json
+```
+
+7. **Start the development server**
+```bash
+go run .
+```
+
+The server will start on `http://localhost:8080`
+
+### Environment Variables
+
+The following environment variables are required:
+
+- `DATABASE_URL` - PostgreSQL connection string (format: `postgres://user:password@host:port/dbname`)
+- `PORT` - Server port (default: 8080)
+- `PROFILE_SEED_FILE` - Optional path to seed file (default: profiles.json)
+
+### Running Tests
+
+```bash
+# Run all tests
 go test ./...
-npm i -g vercel
-vercel login
-vercel env add DATABASE_URL production
-vercel env add DATABASE_URL preview
-vercel --prod
+
+# Run with coverage
+go test -cover ./...
+
+# Run specific test
+go test -run TestName ./...
+
+# Run with verbose output
+go test -v ./...
 ```
 
-Verify:
+### Building a Binary
 
 ```bash
-curl https://<your-vercel-domain>/health
-curl "https://<your-vercel-domain>/api/profiles?page=1&limit=10"
+# Standard build
+go build -o demographic-api
+
+# Optimized for size
+go build -ldflags="-s -w" -o demographic-api
+
+# With version information
+go build -ldflags="-s -w -X main.version=1.0.0" -o demographic-api
 ```
 
-Notes:
-- Vercel detects this project as Go via `go.mod` and `vercel.json`.
-- Seed production data from your machine/CI using production `DATABASE_URL`:
+### Running the Binary Locally
 
 ```bash
-cd ~/IQEA
-export DATABASE_URL="<your-production-db-url>"
-go run . seed -file profiles.json
+# Set environment variables
+export DATABASE_URL="postgres://user:password@localhost:5432/iqea"
+export PORT=8080
+
+# Run
+./demographic-api
 ```
 
----
+## Testing Local Endpoints
 
-# Deployment Guide for Insighta Labs Demographic API on Railway
-
-## Prerequisites
-
-- GitHub account
-- Railway account
-- PostgreSQL database (can be provisioned by Railway)
-- 2026 profiles JSON file
-
-## Deployment Steps
-
-### Step 1: Push to GitHub
-
-1. Initialize or connect your Git repository:
-```bash
-git init
-git add .
-git commit -m "Initial commit: Demographic API"
-git branch -M main
-git remote add origin https://github.com/yourusername/demographic-api.git
-git push -u origin main
-```
-
-2. Ensure your repository is public or Railway has access
-
-### Step 2: Create Railway Project
-
-1. Go to [Railway.app](https://railway.app)
-2. Click "New Project"
-3. Select "Deploy from GitHub"
-4. Connect your GitHub account and select this repository
-5. Railway will automatically detect the Go project
-
-### Step 3: Configure Environment Variables
-
-In your Railway project dashboard:
-
-1. Add a PostgreSQL plugin:
-   - Click "Add Service"
-   - Select "Database"
-   - Choose "PostgreSQL"
-   - Railway will automatically provision and set `DATABASE_URL`
-
-2. Add application variables:
-   - `PORT`: 8080 (or your preferred port)
-
-### Step 4: Deploy
-
-1. Railway automatically deploys on every push to main branch
-2. You can also manually trigger deployment:
-   - Click "Deploy" on your Railway dashboard
-   - Watch the build logs
-
-### Step 5: Verify Deployment
-
-Once deployed:
-
-1. Get your service URL from the Railway dashboard
-2. Test the health endpoint:
-```bash
-curl https://your-railway-url.railway.app/health
-```
-
-Expected response:
-```json
-{"status":"ok"}
-```
-
-### Step 6: Seed the Database
-
-After deployment:
-
-1. Use Railway's CLI to run the seeding job:
-```bash
-railway run go run . seed -file profiles.json
-```
-
-Or create a one-time job:
-
-2. Connect to your Railway PostgreSQL database
-3. Download your 2026 profiles JSON file
-4. Run locally first to verify:
-```bash
-export DATABASE_URL="your-railway-database-url"
-go run . seed -file profiles.json
-```
-
-5. Or add a GitHub Actions workflow to auto-seed on deploy:
-
-Create `.github/workflows/seed.yml`:
-```yaml
-name: Seed Database
-
-on:
-  deployment
-
-jobs:
-  seed:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.21
-      - name: Seed database
-        run: go run . seed -file profiles.json
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-```
-
-### Step 7: Test Endpoints
-
-Test from multiple networks:
+Once the server is running, test the API:
 
 ```bash
 # Health check
-curl https://your-railway-url.railway.app/health
+curl http://localhost:8080/health
 
 # Get all profiles
-curl https://your-railway-url.railway.app/api/profiles
+curl http://localhost:8080/api/profiles
 
 # Filter profiles
-curl "https://your-railway-url.railway.app/api/profiles?gender=male&country_id=NG"
+curl "http://localhost:8080/api/profiles?gender=male&country_id=NG"
 
 # Search with natural language
-curl "https://your-railway-url.railway.app/api/profiles/search?q=young+males+from+nigeria"
+curl "http://localhost:8080/api/profiles/search?q=young+males+from+nigeria"
 
 # Test pagination
-curl "https://your-railway-url.railway.app/api/profiles?page=2&limit=20"
+curl "http://localhost:8080/api/profiles?page=2&limit=20"
 
 # Test sorting
-curl "https://your-railway-url.railway.app/api/profiles?sort_by=age&order=desc"
+curl "http://localhost:8080/api/profiles?sort_by=age&order=desc"
 ```
 
 ## Troubleshooting
 
 ### Application won't start
-- Check logs: `railway logs`
-- Verify `DATABASE_URL` is set correctly
-- Ensure PostgreSQL service is running
-- Check for Go compilation errors
+- Verify Go version: `go version` (should be 1.21+)
+- Check PostgreSQL is running: `psql -U postgres -h localhost`
+- Verify `.env` file exists and has correct `DATABASE_URL`
+- Check for compilation errors: `go build`
 
 ### Database connection issues
 - Verify `DATABASE_URL` format: `postgres://user:password@host:port/dbname`
-- Check PostgreSQL service status
-- Ensure IP whitelist includes Railway's egress IPs
+- Test connection: `psql "your-connection-string"`
+- Ensure PostgreSQL service is running
+- Check port 5432 is not already in use
 
 ### No profiles in database
-- Check if seeding ran successfully
-- Verify profiles.json is properly formatted
-- Check for constraint violations (duplicate names)
-- View seeding logs: `railway logs`
+- Run seed command: `go run . seed -file profiles.json`
+- Verify `profiles.json` file exists and is properly formatted
+- Check for database permission issues: `psql -l`
 
-### CORS errors from client
-- Verify `Access-Control-Allow-Origin: *` header is present
-- Check browser console for exact error
-- Test with `curl` to verify server is responding
-
-### Performance issues
-- Check query logs for slow queries
-- Verify indexes are created:
-  - idx_profiles_gender
-  - idx_profiles_age
-  - idx_profiles_age_group
-  - idx_profiles_country_id
-  - idx_profiles_gender_probability
-  - idx_profiles_country_probability
-  - idx_profiles_created_at
-- Consider optimizing query filters
-- Check database connection pool settings
-
-## Monitoring
-
-1. **Logs**: View in Railway dashboard under "Logs" tab
-2. **Health Endpoint**: Continuously poll `/health` for uptime monitoring
-3. **Metrics**: Railway provides CPU, Memory, and Network metrics
-4. **Alerts**: Set up alerts in Railway dashboard for failures
-
-## Scaling
-
-1. **Database**: Railway can auto-scale PostgreSQL
-2. **Application**: Increase replicas in railway.json:
-```json
-{
-  "deploy": {
-    "numReplicas": 2
-  }
-}
-```
-3. **Caching**: Consider adding Redis for caching frequent queries
-4. **Load Balancing**: Railway handles automatic load balancing
-
-## Security
-
-1. **Environment Variables**: Never commit `.env` files
-2. **Database URL**: Keep DATABASE_URL secret in Railway secrets
-3. **CORS**: Currently allows all origins (`*`). Restrict in production if needed
-4. **Input Validation**: All parameters are validated server-side
-5. **SQL Injection**: Using parameterized queries to prevent injection
-
-## Rollback
-
-To rollback to a previous version:
-
-1. In Railway dashboard, navigate to "Deployments"
-2. Find the previous successful deployment
-3. Click the three dots and select "Redeploy"
-4. Confirm the rollback
-
-## Continuous Deployment
-
-1. Every push to main branch automatically deploys
-2. Failed builds prevent deployment
-3. Successful builds go live immediately
-4. Zero-downtime deployments with Railway
-
-## Cost Considerations
-
-- **PostgreSQL**: First 10GB free, then pay-as-you-go
-- **Application**: $5 minimum per month
-- **Database egress**: Charged by Railway
-- **Traffic**: Generally included in plan
-
-## Accessing Railway Logs
-
+### Port already in use
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
+# Find process using port 8080
+lsof -i :8080
 
-# Login
-railway login
+# Kill the process (if needed)
+kill -9 <PID>
 
-# Link to project
-railway link
-
-# View logs
-railway logs
-
-# View env vars
-railway variables
+# Or use a different port
+export PORT=3000
+go run .
 ```
 
-## Next Steps
+## Development Workflow
 
-1. Monitor performance and user feedback
-2. Optimize queries based on usage patterns
-3. Consider implementing caching for frequent queries
-4. Add authentication if needed
-5. Set up automated backups
+1. Make changes to source files
+2. Run tests: `go test ./...`
+3. Restart server: `go run .`
+4. Test endpoints with curl or Postman
+5. Commit changes following Conventional Commits format
+6. Push to your branch
+
+## Performance Tips for Local Development
+
+- Use indexed queries for better performance
+- Batch database operations when possible
+- Monitor resource usage: `top`, `htop`
+- Check database query logs for slow queries
+- Use connection pooling (configured in application)
+
+## Cloud Deployment
+
+To deploy to cloud platforms (Vercel, Railway, AWS, etc.):
+
+1. Configure platform-specific deployment files/settings through their web interfaces
+2. Set environment variables in your cloud platform dashboard
+3. Configure database connections (PostgreSQL) through the platform
+4. Test endpoints after deployment
+5. Monitor logs and metrics through the platform's dashboard
+
+**Note**: All cloud platform configuration files have been removed. Configure your desired platform through their web interfaces and follow their deployment guides.
