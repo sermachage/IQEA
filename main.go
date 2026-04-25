@@ -25,7 +25,7 @@ func main() {
 	}
 	defer db.Close()
 
-	// Handle CLI commands first
+	// Handle CLI commands first (before auto-seed, so manual seed still works)
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "seed":
@@ -37,7 +37,12 @@ func main() {
 		}
 	}
 
-	// Set up routes (only runs if no CLI command is given)
+	// Auto-seed if database is empty (only runs when starting as a server)
+	if err := autoSeedIfEmpty(db); err != nil {
+		log.Printf("Warning: auto-seed failed: %v\n", err)
+	}
+
+	// Set up routes
 	http.HandleFunc("GET /api/profiles", handleGetProfiles)
 	http.HandleFunc("GET /api/profiles/search", handleSearchProfiles)
 	http.HandleFunc("GET /health", handleHealth)
@@ -78,17 +83,30 @@ func initializeDatabase() (*sql.DB, error) {
 	return dbConn, nil
 }
 
+// autoSeedIfEmpty seeds from the embedded profiles.json when the DB is empty.
+// It does NOT call os.Exit, so the server continues starting up after seeding.
+func autoSeedIfEmpty(db *sql.DB) error {
+	var count int
+	if err := db.QueryRow("SELECT COUNT(*) FROM profiles").Scan(&count); err != nil {
+		return fmt.Errorf("could not check profile count: %v", err)
+	}
+	if count > 0 {
+		log.Printf("Database already has %d profiles, skipping seed\n", count)
+		return nil
+	}
+	log.Println("Database is empty, seeding from embedded profiles.json...")
+	return seedFromEmbedded(db)
+}
+
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
